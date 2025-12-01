@@ -1,15 +1,25 @@
 import type { CircuitJson } from "circuit-json"
 import type { SpectraDsn } from "dsnts"
-import { DsnBoundary, DsnPath, DsnLayer } from "dsnts"
+import {
+  DsnBoundary,
+  DsnPath,
+  DsnLayer,
+  DsnRule,
+  DsnVia,
+  DsnClearance,
+  Width,
+} from "dsnts"
 import { ConverterStage } from "../types"
 import { applyToPoint } from "transformation-matrix"
 
 /**
- * Adds the board boundary and layer structure to the DSN structure.
+ * Adds the complete structure section to the DSN file.
  *
  * This stage handles:
  * 1. Layer structure definition (F.Cu, B.Cu, etc.) with proper indices
  * 2. Board boundary as a rectangular path
+ * 3. Via definitions
+ * 4. Design rules (width, clearances)
  *
  * Board boundary:
  * - Default to 100mm x 100mm if not provided
@@ -21,11 +31,13 @@ import { applyToPoint } from "transformation-matrix"
  * - Generates proper DSN layer format with nested type and property
  * - Each layer has a sequential index starting from 0
  * - Format: (layer <name> (type signal) (property (index <n>)))
+ *
+ * Rules:
+ * - Default trace width: 200μm
+ * - Default clearance: 200μm
+ * - SMD-specific clearances
  */
-export class CreateBoardBoundaryStage extends ConverterStage<
-  CircuitJson,
-  SpectraDsn
-> {
+export class AddStructureStage extends ConverterStage<CircuitJson, SpectraDsn> {
   override _step(): void {
     const { spectraDsn, db, circuitJsonToDsnTransformMatrix } = this.ctx
 
@@ -52,14 +64,14 @@ export class CreateBoardBoundaryStage extends ConverterStage<
     spectraDsn.structure.layers = layers
 
     // Default to 100mm x 100mm if not provided
-    const width = pcbBoard?.width ?? 100
-    const height = pcbBoard?.height ?? 100
+    const boardWidth = pcbBoard?.width ?? 100
+    const boardHeight = pcbBoard?.height ?? 100
     const centerX = pcbBoard?.center?.x ?? 0
     const centerY = pcbBoard?.center?.y ?? 0
 
     // Calculate corners in circuit JSON space (mm)
-    const halfWidth = width / 2
-    const halfHeight = height / 2
+    const halfWidth = boardWidth / 2
+    const halfHeight = boardHeight / 2
 
     // Define corner points in circuit JSON space
     const corners = [
@@ -90,6 +102,30 @@ export class CreateBoardBoundaryStage extends ConverterStage<
     })
 
     spectraDsn.structure.boundary = boundary
+
+    const CLEARANCE_VALUE = 200
+    const CLEARANCE_TYPE_DEFAULT_SMD = "default_smd"
+    const CLEARANCE_TYPE_SMD_SMD = "smd_smd"
+    const CLEARANCE_VALUE_SMD_SMD = 50
+    // TODO: the trace_width value should be from the circuit json pcb_trace element
+    const TRACE_WIDTH_VALUE = 200
+
+    // Add design rules
+    const width = new Width(TRACE_WIDTH_VALUE)
+    const clearances = [
+      new DsnClearance({ value: CLEARANCE_VALUE }),
+      new DsnClearance({
+        value: CLEARANCE_VALUE,
+        type: CLEARANCE_TYPE_DEFAULT_SMD,
+      }),
+      new DsnClearance({
+        value: CLEARANCE_VALUE_SMD_SMD,
+        type: CLEARANCE_TYPE_SMD_SMD,
+      }),
+    ]
+    const rule = new DsnRule()
+    rule.otherChildren = [width, ...clearances]
+    spectraDsn.structure.rules = [rule]
 
     this.finished = true
   }
