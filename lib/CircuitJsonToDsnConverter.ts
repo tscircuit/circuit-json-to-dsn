@@ -5,6 +5,7 @@ import type { ConverterContext, ConverterStage } from "./types"
 import { scale } from "transformation-matrix"
 import { InitializeDsnStage } from "./stages/InitializeDsnStage"
 import { AddStructureStage } from "./stages/AddStructureStage"
+import { AddPlacementStage } from "./stages/AddPlacementStage"
 
 export class CircuitJsonToDsnConverter {
   ctx: ConverterContext
@@ -33,8 +34,8 @@ export class CircuitJsonToDsnConverter {
     this.pipeline = [
       new InitializeDsnStage(circuitJson, this.ctx),
       new AddStructureStage(circuitJson, this.ctx),
+      new AddPlacementStage(circuitJson, this.ctx),
       // TODO: Implement remaining stages
-      // new CreateComponentsAndPadsStage(circuitJson, this.ctx),
       // new CreatePlatedHolesStage(circuitJson, this.ctx),
       // new CreateNetsStage(circuitJson, this.ctx),
       // new CreateTracesStage(circuitJson, this.ctx),
