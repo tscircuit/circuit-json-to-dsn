@@ -4,7 +4,7 @@ import { cju } from "@tscircuit/circuit-json-util"
 import type { ConverterContext, ConverterStage } from "./types"
 import { scale } from "transformation-matrix"
 import { InitializeDsnStage } from "./stages/InitializeDsnStage"
-import { CreateBoardBoundaryStage } from "./stages/CreateBoardBoundaryStage"
+import { AddStructureStage } from "./stages/AddStructureStage"
 
 export class CircuitJsonToDsnConverter {
   ctx: ConverterContext
@@ -32,13 +32,13 @@ export class CircuitJsonToDsnConverter {
 
     this.pipeline = [
       new InitializeDsnStage(circuitJson, this.ctx),
-      new CreateBoardBoundaryStage(circuitJson, this.ctx),
+      new AddStructureStage(circuitJson, this.ctx),
       // TODO: Implement remaining stages
-      // new AddComponentsAndPadsStage(circuitJson, this.ctx),
-      // new AddPlatedHolesStage(circuitJson, this.ctx),
-      // new AddNetsStage(circuitJson, this.ctx),
-      // new AddTracesStage(circuitJson, this.ctx),
-      // new AddViasStage(circuitJson, this.ctx),
+      // new CreateComponentsAndPadsStage(circuitJson, this.ctx),
+      // new CreatePlatedHolesStage(circuitJson, this.ctx),
+      // new CreateNetsStage(circuitJson, this.ctx),
+      // new CreateTracesStage(circuitJson, this.ctx),
+      // new CreateViasStage(circuitJson, this.ctx),
     ]
   }
 

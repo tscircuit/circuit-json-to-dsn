@@ -1,12 +1,12 @@
 import { test, expect } from "bun:test"
-import { CreateBoardBoundaryStage } from "../lib/stages/CreateBoardBoundaryStage"
+import { AddStructureStage } from "../lib/stages/AddStructureStage"
 import { InitializeDsnStage } from "../lib/stages/InitializeDsnStage"
 import type { CircuitJson } from "circuit-json"
 import { cju } from "@tscircuit/circuit-json-util"
 import type { ConverterContext } from "../lib/types"
 import { scale } from "transformation-matrix"
 
-test("CreateBoardBoundaryStage should add a board boundary to DSN structure", () => {
+test("AddStructureStage should add structure with boundary, layers, via, and rules", () => {
   // Create a simple circuit JSON with a PCB board
   const circuitJson: CircuitJson = [
     {
@@ -33,17 +33,36 @@ test("CreateBoardBoundaryStage should add a board boundary to DSN structure", ()
   const initStage = new InitializeDsnStage(circuitJson, ctx)
   initStage.runUntilFinished()
 
-  // Run CreateBoardBoundaryStage
-  const stage = new CreateBoardBoundaryStage(circuitJson, ctx)
+  // Run AddStructureStage
+  const stage = new AddStructureStage(circuitJson, ctx)
   stage.runUntilFinished()
 
   const output = stage.getOutput()
 
-  // Check that boundary was added
+  // Check that structure components were added
   expect(output.structure).toBeDefined()
   expect(output.structure?.boundary).toBeDefined()
   expect(output.structure?.boundary?.paths).toBeDefined()
   expect(output.structure?.boundary?.paths?.length).toBe(1)
+
+  // Check that rules were added
+  expect(output.structure?.rules).toBeDefined()
+  expect(output.structure?.rules?.length).toBe(1)
+  const rule = output.structure?.rules?.[0]
+  expect(rule?.otherChildren).toBeDefined()
+  expect(rule?.otherChildren?.length).toBe(4) // 1 width + 3 clearances
+
+  // Check width (first child)
+  const width = rule?.otherChildren?.[0]
+  expect(width?.token).toBe("width")
+
+  // Check clearances (remaining children)
+  const clearances = rule?.otherChildren?.slice(1)
+  expect(clearances?.length).toBe(3)
+  if (!clearances) throw new Error("Clearances not defined")
+  for (const clearance of clearances) {
+    expect(clearance.token).toBe("clearance")
+  }
 
   const path = output.structure?.boundary?.paths?.[0]
   expect(path).toBeDefined()
@@ -91,6 +110,12 @@ test("CreateBoardBoundaryStage should add a board boundary to DSN structure", ()
             (index 1)
           )
         )
+        (rule
+          (width 200)
+          (clearance 200 )
+          (clearance 200 (type default_smd) )
+          (clearance 50 (type smd_smd) )
+        )
       )
       (placement)
       (library)
@@ -100,7 +125,7 @@ test("CreateBoardBoundaryStage should add a board boundary to DSN structure", ()
   `)
 })
 
-test("CreateBoardBoundaryStage should handle default board size", () => {
+test("AddStructureStage should handle default board size", () => {
   // Create circuit JSON without PCB board (should use defaults)
   const circuitJson: CircuitJson = []
 
@@ -116,8 +141,8 @@ test("CreateBoardBoundaryStage should handle default board size", () => {
   const initStage = new InitializeDsnStage(circuitJson, ctx)
   initStage.runUntilFinished()
 
-  // Run CreateBoardBoundaryStage
-  const stage = new CreateBoardBoundaryStage(circuitJson, ctx)
+  // Run AddStructureStage
+  const stage = new AddStructureStage(circuitJson, ctx)
   stage.runUntilFinished()
 
   const output = stage.getOutput()
