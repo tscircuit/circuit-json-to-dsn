@@ -8,6 +8,11 @@ export interface ConverterContext {
   circuitJson: CircuitJson
   spectraDsn?: SpectraDsn
   circuitJsonToDsnTransformMatrix?: Matrix
+  /**
+   * Maps pcb_component_id to the footprint name (image id) it uses.
+   * Populated by AddLibraryStage, used by AddPlacementStage.
+   */
+  componentToFootprintName?: Map<string, string>
 }
 
 export abstract class ConverterStage<Input, Output> {
