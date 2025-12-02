@@ -6,6 +6,8 @@ import { scale } from "transformation-matrix"
 import { InitializeDsnStage } from "./stages/InitializeDsnStage"
 import { AddStructureStage } from "./stages/AddStructureStage"
 import { AddPlacementStage } from "./stages/AddPlacementStage"
+import { AddLibraryStage } from "./stages/AddLibraryStage"
+import { AddNetworkStage } from "./stages/AddNetworkStage"
 
 export class CircuitJsonToDsnConverter {
   ctx: ConverterContext
@@ -34,10 +36,10 @@ export class CircuitJsonToDsnConverter {
     this.pipeline = [
       new InitializeDsnStage(circuitJson, this.ctx),
       new AddStructureStage(circuitJson, this.ctx),
+      new AddLibraryStage(circuitJson, this.ctx),
       new AddPlacementStage(circuitJson, this.ctx),
+      new AddNetworkStage(circuitJson, this.ctx),
       // TODO: Implement remaining stages
-      // new CreatePlatedHolesStage(circuitJson, this.ctx),
-      // new CreateNetsStage(circuitJson, this.ctx),
       // new CreateTracesStage(circuitJson, this.ctx),
       // new CreateViasStage(circuitJson, this.ctx),
     ]
@@ -68,6 +70,13 @@ export class CircuitJsonToDsnConverter {
    * Get the output as a string
    */
   getOutputString(): string {
-    return this.ctx.spectraDsn!.getString()
+    let dsnString = this.ctx.spectraDsn!.getString()
+
+    // Post-process to remove unnecessary quotes from identifiers
+    // DSN files typically don't quote simple identifiers (alphanumeric, hyphens, underscores, brackets, dots)
+    // This regex matches quoted strings that only contain safe characters
+    dsnString = dsnString.replace(/"([a-zA-Z0-9_\-.\[\](){}:]+)"/g, "$1")
+
+    return dsnString
   }
 }

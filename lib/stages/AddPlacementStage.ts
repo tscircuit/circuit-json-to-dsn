@@ -9,14 +9,15 @@ import { applyToPoint } from "transformation-matrix"
  *
  * This stage handles:
  * 1. Reading pcb_component elements from circuit JSON
- * 2. Creating DsnComponent entries for each component
+ * 2. Creating DsnComponent entries for each unique footprint
  * 3. Creating DsnPlace entries with transformed coordinates
  * 4. Handling component rotation and side (front/back)
  *
  * Placement format in DSN:
  * (placement
- *   (component <component_id>
- *     (place <component_id> <x> <y> <side> <rotation>)
+ *   (component <footprint_name>
+ *     (place <component_ref> <x> <y> <side> <rotation>)
+ *     (place <component_ref2> <x2> <y2> <side2> <rotation2>)
  *   )
  * )
  *
@@ -30,7 +31,12 @@ import { applyToPoint } from "transformation-matrix"
  */
 export class AddPlacementStage extends ConverterStage<CircuitJson, SpectraDsn> {
   override _step(): void {
-    const { spectraDsn, db, circuitJsonToDsnTransformMatrix } = this.ctx
+    const {
+      spectraDsn,
+      db,
+      circuitJsonToDsnTransformMatrix,
+      componentToFootprintName,
+    } = this.ctx
 
     if (!spectraDsn) {
       throw new Error("SpectraDsn instance not initialized in context")
@@ -44,16 +50,30 @@ export class AddPlacementStage extends ConverterStage<CircuitJson, SpectraDsn> {
       throw new Error("Transform matrix not initialized in context")
     }
 
+    if (!componentToFootprintName) {
+      throw new Error(
+        "componentToFootprintName not initialized in context (AddLibraryStage must run first)",
+      )
+    }
+
     // Get all pcb_component elements from circuit JSON
     const pcbComponents = db.pcb_component.list()
 
-    // Collect all components first
-    const components: DsnComponent[] = []
+    // Group places by footprint name
+    const footprintToPlaces = new Map<string, DsnPlace[]>()
 
-    // Create a DsnComponent for each pcb_component
+    // Create DsnPlace entries for each pcb_component
     for (const pcbComponent of pcbComponents) {
       // Get component ID (use pcb_component_id)
       const componentId = pcbComponent.pcb_component_id
+
+      // Get the footprint name from the context (set by AddLibraryStage)
+      const footprintName = componentToFootprintName.get(componentId)
+
+      // Skip if component wasn't processed (no pads/holes)
+      if (!footprintName) {
+        continue
+      }
 
       // Get position (default to origin if not provided)
       const x = pcbComponent.center?.x ?? 0
@@ -82,12 +102,20 @@ export class AddPlacementStage extends ConverterStage<CircuitJson, SpectraDsn> {
         rotation,
       })
 
-      // Create DsnComponent with the place
-      const component = new DsnComponent({
-        imageId: componentId,
-        places: [place],
-      })
+      // Add to footprint group
+      if (!footprintToPlaces.has(footprintName)) {
+        footprintToPlaces.set(footprintName, [])
+      }
+      footprintToPlaces.get(footprintName)!.push(place)
+    }
 
+    // Create DsnComponent entries - one per unique footprint
+    const components: DsnComponent[] = []
+    for (const [footprintName, places] of footprintToPlaces) {
+      const component = new DsnComponent({
+        imageId: footprintName,
+        places,
+      })
       components.push(component)
     }
 
