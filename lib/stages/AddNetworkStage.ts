@@ -191,14 +191,14 @@ export class AddNetworkStage extends ConverterStage<CircuitJson, SpectraDsn> {
       // Only create net if it has pins
       if (pins.size === 0) continue
 
-      // Create net with pins wrapper
-      const net = new DsnNet({
-        netName,
-      })
-
-      // Add pins as a child element
+      // Create DsnPins child with pin references
       const dsnPins = new DsnPins({
         pinRefs: Array.from(pins),
+      })
+
+      // Create net with DsnPins as a child (not using pins property directly)
+      const net = new DsnNet({
+        netName,
       })
       net.otherChildren = [dsnPins]
 

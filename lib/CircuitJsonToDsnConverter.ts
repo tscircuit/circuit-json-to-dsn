@@ -70,13 +70,6 @@ export class CircuitJsonToDsnConverter {
    * Get the output as a string
    */
   getOutputString(): string {
-    let dsnString = this.ctx.spectraDsn!.getString()
-
-    // Post-process to remove unnecessary quotes from identifiers
-    // DSN files typically don't quote simple identifiers (alphanumeric, hyphens, underscores, brackets, dots)
-    // This regex matches quoted strings that only contain safe characters
-    dsnString = dsnString.replace(/"([a-zA-Z0-9_\-.\[\](){}:]+)"/g, "$1")
-
-    return dsnString
+    return this.ctx.spectraDsn!.getString()
   }
 }
