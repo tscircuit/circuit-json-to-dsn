@@ -86,7 +86,11 @@ export class AddPlacementStage extends ConverterStage<CircuitJson, SpectraDsn> {
       })
 
       // Get rotation (default to 0 if not provided)
-      const rotation = pcbComponent.rotation ?? 0
+      // In circuit JSON, pad positions are already in world coordinates (rotated).
+      // Since we calculate relative pin positions by subtracting component center,
+      // the rotation is effectively baked into the pin positions.
+      // We use modulo 90 to handle 90° rotation increments correctly in DSN.
+      const rotation = (pcbComponent.rotation ?? 0) % 90
 
       // Determine side (front or back)
       // Circuit JSON uses "top" and "bottom" layer names
