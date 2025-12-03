@@ -184,6 +184,23 @@ export class AddNetworkStage extends ConverterStage<CircuitJson, SpectraDsn> {
       }
     }
 
+    // Track which pads are already part of a net
+    const padsInNets = new Set<string>()
+    for (const pins of netMap.values()) {
+      for (const pin of pins) {
+        padsInNets.add(pin)
+      }
+    }
+
+    // Add unconnected pads as single-pin nets
+    for (const [, padInfo] of padsBySourcePortId.entries()) {
+      const pinRef = `${padInfo.pcbComponentId}-${padInfo.pinNumber}`
+      if (!padsInNets.has(pinRef)) {
+        const netName = `Net-(${padInfo.pcbComponentId}-Pad${padInfo.pinNumber})`
+        netMap.set(netName, new Set([pinRef]))
+      }
+    }
+
     // Create DsnNet objects
     const nets: DsnNet[] = []
 

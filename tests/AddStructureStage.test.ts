@@ -116,6 +116,9 @@ test("AddStructureStage should add structure with boundary, layers, via, and rul
           (clearance 200 (type default_smd) )
           (clearance 50 (type smd_smd) )
         )
+        (via
+          "Via[0-1]_600:300_um"
+        )
       )
       (placement)
       (library)

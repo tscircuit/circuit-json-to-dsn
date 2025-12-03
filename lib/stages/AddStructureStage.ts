@@ -73,6 +73,9 @@ export class AddStructureStage extends ConverterStage<CircuitJson, SpectraDsn> {
     const halfWidth = boardWidth / 2
     const halfHeight = boardHeight / 2
 
+    const DEFAULT_VIA_OUTER_DIAMETER = 600
+    const DEFAULT_VIA_HOLE_DIAMETER = 300
+
     // Define corner points in circuit JSON space
     const corners = [
       { x: centerX - halfWidth, y: centerY - halfHeight }, // Top left
@@ -126,6 +129,29 @@ export class AddStructureStage extends ConverterStage<CircuitJson, SpectraDsn> {
     const rule = new DsnRule()
     rule.otherChildren = [width, ...clearances]
     spectraDsn.structure.rules = [rule]
+
+    // Get via dimensions from pcb_via if available, otherwise use defaults
+    const pcbVia = db.pcb_via.list()[0]
+    let outerDiameter = DEFAULT_VIA_OUTER_DIAMETER
+    let holeDiameter = DEFAULT_VIA_HOLE_DIAMETER
+
+    if (pcbVia) {
+      const scaledUnit = applyToPoint(circuitJsonToDsnTransformMatrix, { x: 1, y: 0 })
+      const scaleFactor = Math.abs(scaledUnit.x)
+
+      outerDiameter = Math.round((pcbVia.outer_diameter ?? 0.6) * scaleFactor)
+      holeDiameter = Math.round((pcbVia.hole_diameter ?? 0.3) * scaleFactor)
+    }
+
+    // Add via definition - required for Freerouting to work
+    const viaName = `Via[0-1]_${outerDiameter}:${holeDiameter}_um`
+    const via = new DsnVia({
+      padstackNames: [viaName],
+    })
+    spectraDsn.structure.vias = [via]
+
+    // Store via name in context for library stage to create the padstack
+    this.ctx.viaPadstackName = viaName
 
     this.finished = true
   }
