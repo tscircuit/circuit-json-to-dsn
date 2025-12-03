@@ -13,6 +13,12 @@ export interface ConverterContext {
    * Populated by AddLibraryStage, used by AddPlacementStage.
    */
   componentToFootprintName?: Map<string, string>
+  /**
+   * Via padstack name to be created in library.
+   * Format: Via[0-1]_<outerDiameter>:<holeDiameter>_um
+   * Set by AddStructureStage, used by AddLibraryStage.
+   */
+  viaPadstackName?: string
 }
 
 export abstract class ConverterStage<Input, Output> {

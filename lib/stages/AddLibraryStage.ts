@@ -8,6 +8,7 @@ import {
   DsnCircle,
   DsnRect,
   DsnPolygon,
+  DsnAttach,
 } from "dsnts"
 import { ConverterStage } from "../types"
 import { applyToPoint } from "transformation-matrix"
@@ -168,6 +169,12 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
       footprintSignatureToImage.set(signature, image)
       this.footprintSignatureToName.set(signature, footprintName)
       this.ctx.componentToFootprintName!.set(componentId, footprintName)
+    }
+
+    // Add via padstack if defined in context
+    if (this.ctx.viaPadstackName) {
+      const viaPadstack = this.createViaPadstack(this.ctx.viaPadstackName)
+      padstacks.push(viaPadstack)
     }
 
     // Set images and padstacks in library
@@ -371,13 +378,13 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
   ): DsnPadstack {
     const shapes: DsnShape[] = []
     const layer = smtPad.layer ?? "top"
-    const layerNum = layer === "bottom" ? "2" : "1"
+    const layerName = layer === "bottom" ? "B.Cu" : "F.Cu"
 
     switch (smtPad.shape) {
       case "circle": {
         const diameter = Math.round(smtPad.radius * 2 * 1000)
         const circle = new DsnCircle({
-          layer: layerNum,
+          layer: layerName,
           diameter,
         })
         const shape = new DsnShape()
@@ -390,7 +397,7 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
         const width = Math.round(smtPad.width * 1000)
         const height = Math.round(smtPad.height * 1000)
         const rect = new DsnRect({
-          layer: layerNum,
+          layer: layerName,
           x1: -width / 2,
           y1: -height / 2,
           x2: width / 2,
@@ -407,7 +414,7 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
         const width = Math.round(smtPad.width * 1000)
         const height = Math.round(smtPad.height * 1000)
         const rect = new DsnRect({
-          layer: layerNum,
+          layer: layerName,
           x1: -width / 2,
           y1: -height / 2,
           x2: width / 2,
@@ -431,7 +438,7 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
           coordinates.push(transformed.x, transformed.y)
         }
         const polygon = new DsnPolygon({
-          layer: layerNum,
+          layer: layerName,
           apertureWidth: 0,
           coordinates,
         })
@@ -458,12 +465,12 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
     const shapes: DsnShape[] = []
 
     // Plated holes are on all layers
-    for (const layerNum of ["1", "2"]) {
+    for (const layerName of ["F.Cu", "B.Cu"]) {
       switch (platedHole.shape) {
         case "circle": {
           const diameter = Math.round(platedHole.outer_diameter * 1000)
           const circle = new DsnCircle({
-            layer: layerNum,
+            layer: layerName,
             diameter,
           })
           const shape = new DsnShape()
@@ -476,7 +483,7 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
           const width = Math.round(platedHole.outer_width * 1000)
           const height = Math.round(platedHole.outer_height * 1000)
           const rect = new DsnRect({
-            layer: layerNum,
+            layer: layerName,
             x1: -width / 2,
             y1: -height / 2,
             x2: width / 2,
@@ -491,7 +498,7 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
           const width = Math.round(platedHole.rect_pad_width * 1000)
           const height = Math.round(platedHole.rect_pad_height * 1000)
           const rect = new DsnRect({
-            layer: layerNum,
+            layer: layerName,
             x1: -width / 2,
             y1: -height / 2,
             x2: width / 2,
@@ -628,6 +635,40 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
       hash = hash & hash // Convert to 32bit integer
     }
     return Math.abs(hash).toString(36)
+  }
+
+  /**
+   * Creates a via padstack definition for routing between layers.
+   * Parses dimensions from padstack name (format: Via[0-1]_<outer>:<hole>_um).
+   */
+  private createViaPadstack(padstackId: string): DsnPadstack {
+    // Parse outer diameter from name (e.g., "Via[0-1]_600:300_um" -> 600)
+    const match = padstackId.match(/_(\d+):(\d+)_um$/)
+    const diameter = match ? parseInt(match[1]!, 10) : 600
+
+    const shapes: DsnShape[] = []
+
+    // Create circular shape for each copper layer
+    for (const layerName of ["F.Cu", "B.Cu"]) {
+      const circle = new DsnCircle({
+        layer: layerName,
+        diameter,
+      })
+      const shape = new DsnShape()
+      shape.otherChildren = [circle]
+      shapes.push(shape)
+    }
+
+    const padstack = new DsnPadstack({
+      padstackId,
+      shapes,
+    })
+
+    // Add attach off property
+    const attach = new DsnAttach({ value: false })
+    padstack.otherChildren = [attach]
+
+    return padstack
   }
 
   override getOutput(): SpectraDsn {
