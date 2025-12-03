@@ -136,7 +136,10 @@ export class AddStructureStage extends ConverterStage<CircuitJson, SpectraDsn> {
     let holeDiameter = DEFAULT_VIA_HOLE_DIAMETER
 
     if (pcbVia) {
-      const scaledUnit = applyToPoint(circuitJsonToDsnTransformMatrix, { x: 1, y: 0 })
+      const scaledUnit = applyToPoint(circuitJsonToDsnTransformMatrix, {
+        x: 1,
+        y: 0,
+      })
       const scaleFactor = Math.abs(scaledUnit.x)
 
       outerDiameter = Math.round((pcbVia.outer_diameter ?? 0.6) * scaleFactor)

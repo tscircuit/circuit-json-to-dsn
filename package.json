@@ -3,6 +3,13 @@
   "main": "dist/index.js",
   "version": "0.0.1",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tscircuit/circuit-json-to-dsn"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "download-references": "bun run scripts/download-references.ts",
     "download-demos": "bun run scripts/download-demos.ts",
