@@ -241,6 +241,18 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
         case "pill":
           holeDesc = `ho:${Math.round(hole.outer_width * 1000)}x${Math.round(hole.outer_height * 1000)}`
           break
+        case "circular_hole_with_rect_pad":
+        case "pill_hole_with_rect_pad":
+        case "rotated_pill_hole_with_rect_pad":
+          holeDesc = `hr:${Math.round(hole.rect_pad_width * 1000)}x${Math.round(hole.rect_pad_height * 1000)}`
+          break
+        case "hole_with_polygon_pad": {
+          const pointsStr = hole.pad_outline
+            .map((p: any) => `${p.x},${p.y}`)
+            .join("_")
+          holeDesc = `hp:${this.simpleHash(pointsStr)}`
+          break
+        }
         default:
           holeDesc = `hu:${hole.shape}`
       }
@@ -349,10 +361,19 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
         padstackId = `p${width}x${height}_hole`
         break
       }
-      case "circular_hole_with_rect_pad": {
+      case "circular_hole_with_rect_pad":
+      case "pill_hole_with_rect_pad":
+      case "rotated_pill_hole_with_rect_pad": {
         const width = Math.round(platedHole.rect_pad_width * 1000)
         const height = Math.round(platedHole.rect_pad_height * 1000)
         padstackId = `p${width}x${height}_recthole`
+        break
+      }
+      case "hole_with_polygon_pad": {
+        const pointsStr = platedHole.pad_outline
+          .map((p: any) => `${p.x},${p.y}`)
+          .join("_")
+        padstackId = `p${this.simpleHash(pointsStr)}_polyhole`
         break
       }
       default:
@@ -494,7 +515,9 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
           shapes.push(shape)
           break
         }
-        case "circular_hole_with_rect_pad": {
+        case "circular_hole_with_rect_pad":
+        case "pill_hole_with_rect_pad":
+        case "rotated_pill_hole_with_rect_pad": {
           const width = Math.round(platedHole.rect_pad_width * 1000)
           const height = Math.round(platedHole.rect_pad_height * 1000)
           const rect = new DsnRect({
@@ -506,6 +529,28 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
           })
           const shape = new DsnShape()
           shape.otherChildren = [rect]
+          shapes.push(shape)
+          break
+        }
+        case "hole_with_polygon_pad": {
+          const coordinates: number[] = []
+          for (const point of platedHole.pad_outline) {
+            const x = Array.isArray(point) ? point[0] : point.x
+            const y = Array.isArray(point) ? point[1] : point.y
+            // Padstacks are pin-local; pad_outline is already relative to the hole.
+            const transformed = applyToPoint(
+              this.ctx.circuitJsonToDsnTransformMatrix!,
+              { x, y },
+            )
+            coordinates.push(transformed.x, transformed.y)
+          }
+          const polygon = new DsnPolygon({
+            layer: layerName,
+            apertureWidth: 0,
+            coordinates,
+          })
+          const shape = new DsnShape()
+          shape.otherChildren = [polygon]
           shapes.push(shape)
           break
         }
@@ -620,7 +665,7 @@ export class AddLibraryStage extends ConverterStage<CircuitJson, SpectraDsn> {
       pinId,
       x: transformed.x,
       y: transformed.y,
-      rotation: platedHole.ccw_rotation ?? 0,
+      rotation: platedHole.rect_ccw_rotation ?? platedHole.ccw_rotation ?? 0,
     })
   }
 
