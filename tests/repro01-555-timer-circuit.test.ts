@@ -131,41 +131,29 @@ test("repro01-555-timer-circuit", async () => {
         )
       )
       (network
-        (net "Net-(pcb_component_1-Pad7)"
-          (pins pcb_component_1-7 pcb_component_1-2)
-        )
-        (net "Net-(pcb_component_2-Pad1)"
-          (pins pcb_component_2-1 pcb_component_1-8)
-        )
-        (net "Net-(pcb_component_2-Pad2)"
-          (pins pcb_component_2-2 pcb_component_5-1)
-        )
-        (net "Net-(pcb_component_3-Pad1)"
-          (pins pcb_component_3-1 pcb_component_1-4)
-        )
-        (net "Net-(pcb_component_3-Pad2)"
-          (pins pcb_component_3-2 pcb_component_1-3)
-        )
-        (net "Net-(pcb_component_4-Pad1)"
-          (pins pcb_component_4-1 pcb_component_3-2)
-        )
-        (net "Net-(pcb_component_4-Pad2)"
-          (pins pcb_component_4-2 pcb_component_7-1)
-        )
-        (net "Net-(pcb_component_5-Pad1)"
-          (pins pcb_component_5-1 pcb_component_1-6)
-        )
-        (net "Net-(pcb_component_6-Pad1)"
-          (pins pcb_component_6-1 pcb_component_1-5)
-        )
-        (net "Net-(pcb_component_8-Pad1)"
-          (pins pcb_component_8-1 pcb_component_7-1)
-        )
-        (net "VCC_source_net_0"
-          (pins pcb_component_0-1 pcb_component_1-8)
-        )
         (net "GND_source_net_1"
           (pins pcb_component_0-2 pcb_component_1-1 pcb_component_5-2 pcb_component_6-2 pcb_component_7-2 pcb_component_8-2)
+        )
+        (net "Net-(pcb_component_1-Pad2)"
+          (pins pcb_component_1-2 pcb_component_1-7)
+        )
+        (net "Net-(pcb_component_1-Pad3)"
+          (pins pcb_component_1-3 pcb_component_3-2 pcb_component_4-1)
+        )
+        (net "Net-(pcb_component_1-Pad4)"
+          (pins pcb_component_1-4 pcb_component_3-1)
+        )
+        (net "Net-(pcb_component_1-Pad5)"
+          (pins pcb_component_1-5 pcb_component_6-1)
+        )
+        (net "Net-(pcb_component_1-Pad6)"
+          (pins pcb_component_1-6 pcb_component_2-2 pcb_component_5-1)
+        )
+        (net "Net-(pcb_component_4-Pad2)"
+          (pins pcb_component_4-2 pcb_component_7-1 pcb_component_8-1)
+        )
+        (net "VCC_source_net_0"
+          (pins pcb_component_0-1 pcb_component_1-8 pcb_component_2-1)
         )
       )
       (wiring)
