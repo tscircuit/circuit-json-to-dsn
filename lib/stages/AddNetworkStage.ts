@@ -21,16 +21,9 @@ import { ConverterStage } from "../types"
  * - Format: "<component_name>-<pin_number>"
  * - Example: "R1_simple_resistor_0-1" or "U1_lm555_0-2"
  *
- * Net creation logic:
- * 1. Build a map of source_port_id to pad info (component name + pin number)
- * 2. For source_net elements:
- *    - Find all source_trace elements connected to the net
- *    - Get all source_port_ids from those traces
- *    - Map to component-pin identifiers
- * 3. For source_trace elements (without explicit nets):
- *    - Create nets based on connected ports
- *    - Generate net name from first connected component
- * 4. Handle unconnected pads
+ * Connected source ports and source nets form one DSN net, including indirect
+ * connections through other traces. Explicit net names take precedence over
+ * generated pin-based names. Unconnected pads retain single-pin nets.
  */
 export class AddNetworkStage extends ConverterStage<CircuitJson, SpectraDsn> {
   override _step(): void {
@@ -127,90 +120,73 @@ export class AddNetworkStage extends ConverterStage<CircuitJson, SpectraDsn> {
       })
     }
 
-    // Map to store nets and their pins
-    const netMap = new Map<string, Set<string>>()
+    // Join source ports and named nets before assigning physical pins.
+    const parents = new Map<string, string>()
+    const findRoot = (id: string): string => {
+      let root = id
+      while (parents.has(root)) root = parents.get(root)!
+      while (id !== root) {
+        const parent = parents.get(id)!
+        parents.set(id, root)
+        id = parent
+      }
+      return root
+    }
 
-    // Process source_trace elements to create nets
     for (const trace of db.source_trace.list()) {
-      const connectedPorts = trace.connected_source_port_ids || []
-
-      if (connectedPorts.length >= 2 && connectedPorts[0]) {
-        const firstPad = padsBySourcePortId.get(connectedPorts[0])
-
-        if (firstPad) {
-          const netName = `Net-(${firstPad.pcbComponentId}-Pad${firstPad.pinNumber})`
-
-          if (!netMap.has(netName)) {
-            netMap.set(netName, new Set())
-          }
-
-          for (const portId of connectedPorts) {
-            const padInfo = padsBySourcePortId.get(portId)
-            if (padInfo) {
-              netMap
-                .get(netName)
-                ?.add(`${padInfo.pcbComponentId}-${padInfo.pinNumber}`)
-            }
-          }
-        }
+      const connections = [
+        ...(trace.connected_source_port_ids ?? []).map((id) => `port:${id}`),
+        ...(trace.connected_source_net_ids ?? []).map((id) => `net:${id}`),
+      ]
+      if (connections.length === 0) continue
+      const root = findRoot(connections[0]!)
+      for (const id of connections.slice(1)) {
+        const otherRoot = findRoot(id)
+        if (otherRoot !== root) parents.set(otherRoot, root)
       }
     }
 
-    // Add source nets (GND, VCC, etc.)
+    // Explicit net names take precedence; aliases use a stable name.
+    const namesByRoot = new Map<string, string>()
     for (const sourceNet of db.source_net.list()) {
-      const netName = `${sourceNet.name}_${sourceNet.source_net_id}`
-
-      if (!netMap.has(netName)) {
-        netMap.set(netName, new Set())
-      }
-
-      // Find all traces connected to this net
-      const connectedTraces = db.source_trace
-        .list()
-        .filter((t) =>
-          t.connected_source_net_ids?.includes(sourceNet.source_net_id),
-        )
-
-      // Add connected ports to the net
-      for (const trace of connectedTraces) {
-        for (const portId of trace.connected_source_port_ids || []) {
-          const padInfo = padsBySourcePortId.get(portId)
-          if (padInfo) {
-            netMap
-              .get(netName)
-              ?.add(`${padInfo.pcbComponentId}-${padInfo.pinNumber}`)
-          }
-        }
+      const root = findRoot(`net:${sourceNet.source_net_id}`)
+      const name = `${sourceNet.name}_${sourceNet.source_net_id}`
+      const previousName = namesByRoot.get(root)
+      if (previousName === undefined || name < previousName) {
+        namesByRoot.set(root, name)
       }
     }
 
-    // Track which pads are already part of a net
-    const padsInNets = new Set<string>()
-    for (const pins of netMap.values()) {
-      for (const pin of pins) {
-        padsInNets.add(pin)
-      }
-    }
-
-    // Add unconnected pads as single-pin nets
-    for (const [, padInfo] of padsBySourcePortId.entries()) {
+    const groups = new Map<string, { defaultName: string; pins: Set<string> }>()
+    for (const padInfo of padsBySourcePortId.values()) {
+      const root = findRoot(`port:${padInfo.sourcePortId}`)
       const pinRef = `${padInfo.pcbComponentId}-${padInfo.pinNumber}`
-      if (!padsInNets.has(pinRef)) {
-        const netName = `Net-(${padInfo.pcbComponentId}-Pad${padInfo.pinNumber})`
-        netMap.set(netName, new Set([pinRef]))
+      const defaultName = `Net-(${padInfo.pcbComponentId}-Pad${padInfo.pinNumber})`
+      const group = groups.get(root)
+      if (group) {
+        group.pins.add(pinRef)
+        if (defaultName < group.defaultName) group.defaultName = defaultName
+      } else {
+        groups.set(root, { defaultName, pins: new Set([pinRef]) })
       }
+    }
+
+    const netMap = new Map<string, Set<string>>()
+    for (const [root, group] of groups) {
+      netMap.set(namesByRoot.get(root) ?? group.defaultName, group.pins)
     }
 
     // Create DsnNet objects
     const nets: DsnNet[] = []
 
-    for (const [netName, pins] of netMap.entries()) {
+    for (const netName of Array.from(netMap.keys()).sort()) {
+      const pins = netMap.get(netName)!
       // Only create net if it has pins
       if (pins.size === 0) continue
 
       // Create DsnPins child with pin references
       const dsnPins = new DsnPins({
-        pinRefs: Array.from(pins),
+        pinRefs: Array.from(pins).sort(),
       })
 
       // Create net with DsnPins as a child (not using pins property directly)

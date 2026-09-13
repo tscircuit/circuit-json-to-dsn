@@ -145,53 +145,47 @@ test("repro03-motor-driver-breakout", async () => {
         )
       )
       (network
-        (net "Net-(pcb_component_1-Pad8)"
-          (pins pcb_component_1-8 pcb_component_3-2 pcb_component_4-2 pcb_component_0-24 pcb_component_0-14)
+        (net "GND_source_net_1"
+          (pins pcb_component_0-10 pcb_component_0-18 pcb_component_0-3 pcb_component_0-4 pcb_component_0-9 pcb_component_1-1 pcb_component_1-6 pcb_component_2-8 pcb_component_3-1 pcb_component_4-1 pcb_component_5-2)
         )
-        (net "Net-(pcb_component_1-Pad5)"
-          (pins pcb_component_1-5 pcb_component_0-1 pcb_component_0-2)
+        (net "Net-(pcb_component_0-Pad1)"
+          (pins pcb_component_0-1 pcb_component_0-2 pcb_component_1-5)
         )
-        (net "Net-(pcb_component_1-Pad4)"
-          (pins pcb_component_1-4 pcb_component_0-5 pcb_component_0-6)
+        (net "Net-(pcb_component_0-Pad11)"
+          (pins pcb_component_0-11 pcb_component_0-12 pcb_component_1-2)
         )
-        (net "Net-(pcb_component_1-Pad3)"
-          (pins pcb_component_1-3 pcb_component_0-7 pcb_component_0-8)
+        (net "Net-(pcb_component_0-Pad13)"
+          (pins pcb_component_0-13 pcb_component_0-14 pcb_component_0-24 pcb_component_1-8 pcb_component_3-2 pcb_component_4-2)
         )
-        (net "Net-(pcb_component_1-Pad2)"
-          (pins pcb_component_1-2 pcb_component_0-11 pcb_component_0-12)
+        (net "Net-(pcb_component_0-Pad15)"
+          (pins pcb_component_0-15 pcb_component_2-7)
         )
-        (net "Net-(pcb_component_2-Pad7)"
-          (pins pcb_component_2-7 pcb_component_0-15)
+        (net "Net-(pcb_component_0-Pad16)"
+          (pins pcb_component_0-16 pcb_component_2-6)
         )
-        (net "Net-(pcb_component_2-Pad6)"
-          (pins pcb_component_2-6 pcb_component_0-16)
+        (net "Net-(pcb_component_0-Pad17)"
+          (pins pcb_component_0-17 pcb_component_2-5)
         )
-        (net "Net-(pcb_component_2-Pad5)"
-          (pins pcb_component_2-5 pcb_component_0-17)
+        (net "Net-(pcb_component_0-Pad19)"
+          (pins pcb_component_0-19 pcb_component_2-4)
         )
-        (net "Net-(pcb_component_2-Pad4)"
-          (pins pcb_component_2-4 pcb_component_0-19)
+        (net "Net-(pcb_component_0-Pad21)"
+          (pins pcb_component_0-21 pcb_component_2-3)
         )
-        (net "Net-(pcb_component_2-Pad3)"
-          (pins pcb_component_2-3 pcb_component_0-21)
+        (net "Net-(pcb_component_0-Pad22)"
+          (pins pcb_component_0-22 pcb_component_2-2)
         )
-        (net "Net-(pcb_component_2-Pad2)"
-          (pins pcb_component_2-2 pcb_component_0-22)
+        (net "Net-(pcb_component_0-Pad23)"
+          (pins pcb_component_0-23 pcb_component_2-1)
         )
-        (net "Net-(pcb_component_2-Pad1)"
-          (pins pcb_component_2-1 pcb_component_0-23)
+        (net "Net-(pcb_component_0-Pad5)"
+          (pins pcb_component_0-5 pcb_component_0-6 pcb_component_1-4)
         )
-        (net "Net-(pcb_component_3-Pad2)"
-          (pins pcb_component_3-2 pcb_component_0-24 pcb_component_0-14 pcb_component_0-13)
-        )
-        (net "Net-(pcb_component_4-Pad2)"
-          (pins pcb_component_4-2 pcb_component_0-24 pcb_component_0-14 pcb_component_0-13)
+        (net "Net-(pcb_component_0-Pad7)"
+          (pins pcb_component_0-7 pcb_component_0-8 pcb_component_1-3)
         )
         (net "VCC_source_net_0"
-          (pins pcb_component_1-7 pcb_component_5-1 pcb_component_0-20)
-        )
-        (net "GND_source_net_1"
-          (pins pcb_component_1-6 pcb_component_1-1 pcb_component_2-8 pcb_component_3-1 pcb_component_4-1 pcb_component_5-2 pcb_component_0-18 pcb_component_0-3 pcb_component_0-4 pcb_component_0-9 pcb_component_0-10)
+          (pins pcb_component_0-20 pcb_component_1-7 pcb_component_5-1)
         )
       )
       (wiring)
