@@ -19,7 +19,9 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "bun-match-svg": "^0.0.14",
     "circuit-to-svg": "^0.0.286",
+    "dsn-to-circuit-json": "^0.0.2",
     "dsnts": "^0.1.9",
     "ky": "^1.14.1",
     "stack-svgs": "^0.0.1",

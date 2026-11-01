@@ -6,7 +6,9 @@
       "name": "circuit-json-to-dsn",
       "devDependencies": {
         "@types/bun": "latest",
+        "bun-match-svg": "^0.0.14",
         "circuit-to-svg": "^0.0.286",
+        "dsn-to-circuit-json": "^0.0.2",
         "dsnts": "^0.1.9",
         "ky": "^1.14.1",
         "stack-svgs": "^0.0.1",
@@ -389,6 +391,8 @@
     "domhandler": ["domhandler@5.0.3", "", { "dependencies": { "domelementtype": "^2.3.0" } }, "sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w=="],
 
     "domutils": ["domutils@3.2.2", "", { "dependencies": { "dom-serializer": "^2.0.0", "domelementtype": "^2.3.0", "domhandler": "^5.0.3" } }, "sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw=="],
+
+    "dsn-to-circuit-json": ["dsn-to-circuit-json@0.0.2", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-WWEX8k0omTEH7ig/pTIiS7mh4gQLFvn6BZlDMN7ae4PO8uUsZzWTIbVu4RdzM/vtZ+2SC8QFiuXm0oLiMD0+fA=="],
 
     "dsnts": ["dsnts@0.1.9", "", { "dependencies": { "bun-match-svg": "^0.0.14", "svgson": "^5.3.1" }, "peerDependencies": { "typescript": "^5" } }, "sha512-Z7JGIId6wKhty7cG2PWO7+UyKHXfIk2voraR4kqudgj3fD/t168fFTB5EQGiNvq9uqwwbjyLakTVf3ehdTk6ZQ=="],
 

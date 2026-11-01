@@ -552,37 +552,5 @@
     "pcb_component_id": "pcb_component_1",
     "source_component_id": "source_component_1",
     "footprinter_string": "0402"
-  },
-  {
-    "type": "pcb_trace",
-    "pcb_trace_id": "source_trace_0_0",
-    "connection_name": "source_trace_0",
-    "route": [
-      {
-        "route_type": "wire",
-        "x": -0.51,
-        "y": 0,
-        "width": 0.15,
-        "layer": "top",
-        "start_pcb_port_id": "pcb_port_0"
-      },
-      {
-        "route_type": "wire",
-        "x": -2.0500000000000007,
-        "y": 0,
-        "width": 0.15,
-        "layer": "top"
-      },
-      {
-        "route_type": "wire",
-        "x": -2.0500000000000007,
-        "y": -6.245698675651501e-17,
-        "width": 0.15,
-        "layer": "top",
-        "end_pcb_port_id": "pcb_port_2"
-      }
-    ],
-    "subcircuit_id": "subcircuit_source_group_0",
-    "source_trace_id": "source_trace_0"
   }
 ]

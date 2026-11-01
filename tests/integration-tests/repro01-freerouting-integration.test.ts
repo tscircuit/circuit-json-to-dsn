@@ -3,9 +3,10 @@ import { expect, test } from "bun:test"
 import { routeDsnWithFreerouting } from "../fixtures/routeDsnWithFreerouting"
 import circuitJson from "../assets/two-resistor-circuit.json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import { convertSesToCircuitJson } from "dsn-to-circuit-json"
 import { stackSvgsHorizontally } from "stack-svgs"
 
-test.skip("freerouting integration - two resistor circuit", async () => {
+test("freerouting integration - two resistor circuit", async () => {
   const circuitSvgBeforeRouting = convertCircuitJsonToPcbSvg(circuitJson as any)
 
   // 1. Convert circuit JSON to DSN
@@ -23,5 +24,23 @@ test.skip("freerouting integration - two resistor circuit", async () => {
   // Optionally save for debugging
   await Bun.write("./debug-output/two-resistor-circuit.ses", sesOutput)
 
-  // TODO: parse the SES output and get the circuit SVG after routing
+  const circuitJsonAfterRouting = await convertSesToCircuitJson(sesOutput)
+  const fullCircuitJsonAfterRouting = [
+    ...circuitJson,
+    ...circuitJsonAfterRouting,
+  ]
+  const circuitSvgAfterRouting = convertCircuitJsonToPcbSvg(
+    fullCircuitJsonAfterRouting as any,
+  )
+
+  const combinedSvg = stackSvgsHorizontally(
+    [circuitSvgBeforeRouting, circuitSvgAfterRouting],
+    { gap: 2 },
+  )
+  await Bun.write(
+    "./debug-output/two-resistor-circuit-combined.svg",
+    combinedSvg,
+  )
+
+  expect(combinedSvg).toMatchSvgSnapshot(import.meta.path)
 })
