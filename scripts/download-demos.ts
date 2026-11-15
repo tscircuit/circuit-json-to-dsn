@@ -69,8 +69,7 @@ async function main(): Promise<void> {
         await fetchDemo(demo)
       } catch (error) {
         console.error(`Failed to download ${demo.filename}:`, error)
-        process.exitCode = 1
-      }
+        }
     }),
   )
 
